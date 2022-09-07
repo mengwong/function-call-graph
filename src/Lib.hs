@@ -146,7 +146,7 @@ data ParseContext = ParseContext
   , inSqlTH      :: Bool
   , currentFunc  :: FuncId
   , defFuncs     :: S.Set FuncId
-  , funcMap      :: M.Map FuncId (S.Set FuncName)
+  , funcMap      :: M.Map FuncId (S.Set FuncName) -- [TODO] switch the values to S.Set FuncId too
   , fileMap      :: M.Map FuncFile ColorName
   }
 
@@ -210,13 +210,15 @@ someFunc opts = do
       footer = "}"
       file2func = M.fromListWith (<>) (fmap (:[]) . swap <$> toList funcs)
       defs =
-        [ commentCluster ("subgraph cluster_" ++ M.findWithDefault "0" file filemap ++ " {\n") ++
+        [ commentCluster ("subgraph cluster_" ++ colorNum ++ " {\n") ++
           commentCluster ("  label = " ++ wrapQuotes file ++ ";\n") ++
-          unlines [ "      " ++ wrapQuotes funcname ++ " [color=" ++ M.findWithDefault "white" file filemap ++ "];"
+          unlines [ "     " ++ wrapQuotes (funcname {- ++ "_" ++ colorNum -}) ++
+                    " [label= " ++ wrapQuotes funcname ++ ", color=" ++ colorNum ++ "];"
                   | funcname <- file2func M.! file
                   ] ++
           commentCluster "}\n"
         | file <- M.keys file2func
+        , let colorNum = M.findWithDefault "0" file filemap
         ]
       maps = M.foldMapWithKey (\(k,_) a -> map (\y -> wrapQuotes k ++ " -> " ++ wrapQuotes y ++ ";") $ toList a) links'
   mapM_ putStrLn $ header : (defs ++ maps ++ [footer])
