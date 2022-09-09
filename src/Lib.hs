@@ -218,12 +218,15 @@ someFunc opts = do
                   ] ++
           commentCluster "}\n"
         | file <- M.keys file2func
-        , let colorNum = M.findWithDefault "0" file filemap
+        , let colorNum = strModn 13 $ M.findWithDefault "1" file filemap
         ]
       maps = M.foldMapWithKey (\(k,_) a -> map (\y -> wrapQuotes k ++ " -> " ++ wrapQuotes y ++ ";") $ toList a) links'
   mapM_ putStrLn $ header : (defs ++ maps ++ [footer])
 
   where
+    strModn :: Int -> String -> String
+    strModn n s = show $ 1 + ((read s :: Int) - 1 `mod` n)
+
     commentCluster x =
       if clusters opts
       then "   "   ++ x
